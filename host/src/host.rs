@@ -5,6 +5,7 @@ use core::cell::RefCell;
 use core::future::poll_fn;
 use core::mem::MaybeUninit;
 use core::task::Poll;
+
 use bt_hci::cmd::controller_baseband::{
     HostBufferSize, HostNumberOfCompletedPackets, Reset, SetControllerToHostFlowControl, SetEventMask,
 };
@@ -566,7 +567,7 @@ impl<'d, C: Controller> Runner<'d, C> {
     }
 
     /// Run the host.
-    pub async fn run(&mut self) -> Result<(), BleHostError<C::Error>>
+    pub async fn run(&mut self) -> Result<u8, BleHostError<C::Error>>
     where
         C: ControllerCmdSync<Disconnect>
             + ControllerCmdSync<SetEventMask>
@@ -590,7 +591,7 @@ impl<'d, C: Controller> Runner<'d, C> {
     }
 
     /// Run the host with a vendor event handler for custom events.
-    pub async fn run_with_handler<E: EventHandler>(&mut self, event_handler: &E) -> Result<(), BleHostError<C::Error>>
+    pub async fn run_with_handler<E: EventHandler>(&mut self, event_handler: &E) -> Result<u8, BleHostError<C::Error>>
     where
         C: ControllerCmdSync<Disconnect>
             + ControllerCmdSync<SetEventMask>
@@ -615,16 +616,25 @@ impl<'d, C: Controller> Runner<'d, C> {
         pin_mut!(control_fut, rx_fut, tx_fut);
         match select3(&mut tx_fut, &mut rx_fut, &mut control_fut).await {
             Either3::First(result) => {
-                warn!("[host] tx_fut exit");
-                result
+                trace!("[host] tx_fut exit");
+                match result {
+                    Ok(_) => Ok(0),
+                    Err(e) => Ok(1),
+                }
             }
             Either3::Second(result) => {
-                warn!("[host] rx_fut exit");
-                result
+                trace!("[host] rx_fut exit");
+                match result {
+                    Ok(_) => Ok(0),
+                    Err(e) => Ok(2),
+                }
             }
             Either3::Third(result) => {
-                warn!("[host] control_fut exit");
-                result
+                trace!("[host] control_fut exit");
+                match result {
+                    Ok(_) => Ok(0),
+                    Err(e) => Ok(3),
+                }
             }
         }
     }
