@@ -5,7 +5,6 @@ use core::cell::RefCell;
 use core::future::poll_fn;
 use core::mem::MaybeUninit;
 use core::task::Poll;
-use log::warn;
 use bt_hci::cmd::controller_baseband::{
     HostBufferSize, HostNumberOfCompletedPackets, Reset, SetControllerToHostFlowControl, SetEventMask,
 };
