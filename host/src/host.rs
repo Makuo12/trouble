@@ -5,7 +5,7 @@ use core::cell::RefCell;
 use core::future::poll_fn;
 use core::mem::MaybeUninit;
 use core::task::Poll;
-
+use log::warn;
 use bt_hci::cmd::controller_baseband::{
     HostBufferSize, HostNumberOfCompletedPackets, Reset, SetControllerToHostFlowControl, SetEventMask,
 };
@@ -616,15 +616,15 @@ impl<'d, C: Controller> Runner<'d, C> {
         pin_mut!(control_fut, rx_fut, tx_fut);
         match select3(&mut tx_fut, &mut rx_fut, &mut control_fut).await {
             Either3::First(result) => {
-                trace!("[host] tx_fut exit");
+                warn!("[host] tx_fut exit");
                 result
             }
             Either3::Second(result) => {
-                trace!("[host] rx_fut exit");
+                warn!("[host] rx_fut exit");
                 result
             }
             Either3::Third(result) => {
-                trace!("[host] control_fut exit");
+                warn!("[host] control_fut exit");
                 result
             }
         }
